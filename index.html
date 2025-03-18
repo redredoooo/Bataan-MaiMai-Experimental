@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaiMai Bataan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center py-10">
+    <h1 class="text-3xl font-bold mb-6">Player Queue System</h1>
+    
+    <!-- Queue Display -->
+    <div class="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h2 class="text-xl font-semibold mb-4">Current Queue</h2>
+        <p class="mb-2">Total Queued Players: <span id="queueCount">0</span></p>
+        <div id="queueList" class="grid grid-cols-2 gap-2"></div>
+    </div>
+
+    <!-- Add Player Form -->
+    <div class="mt-6">
+        <input type="text" id="playerName" placeholder="Enter player name" class="p-2 rounded text-black">
+        <button onclick="addPlayer()" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Add Player</button>
+    </div>
+    
+    <!-- Swap Players Form -->
+    <div class="mt-6">
+        <input type="number" id="pos1" placeholder="Position 1" class="p-2 rounded text-black">
+        <input type="number" id="pos2" placeholder="Position 2" class="p-2 rounded text-black">
+        <button onclick="swapPlayers()" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">Swap</button>
+    </div>
+
+    <!-- Delete Top Pair Button -->
+    <div class="mt-6">
+        <button onclick="deleteTopPair()" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Delete Top Pair</button>
+    </div>
+
+    <script>
+        const socket = io("https://bataan-maimai-v1-3.onrender.com"); // Replace with actual backend URL
+
+        function updateQueueDisplay(queue) {
+            const queueList = document.getElementById("queueList");
+            const queueCount = document.getElementById("queueCount");
+            queueList.innerHTML = "";
+            queueCount.textContent = queue.length;
+            queue.forEach((player, index) => {
+                const div = document.createElement("div");
+                div.className = "p-2 bg-gray-700 rounded text-center";
+                div.textContent = `${index + 1}. ${player}`;
+                queueList.appendChild(div);
+            });
+        }
+        
+        function addPlayer() {
+            const name = document.getElementById("playerName").value.trim();
+            if (name) {
+                socket.emit("addPlayer", name);
+                document.getElementById("playerName").value = "";
+            }
+        }
+        
+        function swapPlayers() {
+            let pos1 = parseInt(document.getElementById("pos1").value) - 1;
+            let pos2 = parseInt(document.getElementById("pos2").value) - 1;
+            socket.emit("swapPlayers", { pos1, pos2 });
+        }
+        
+        function deleteTopPair() {
+            socket.emit("deleteTopPair");
+        }
+        
+        socket.on("queueUpdate", (queue) => {
+            updateQueueDisplay(queue);
+        });
+    </script>
+</body>
+</html>
