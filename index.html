@@ -1,77 +1,166 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MaiMai Bataan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <title>Bataan MaiMai Queue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #adminControls {
+            display: none;
+            margin-top: 20px;
+        }
+        #currentPlayers {
+            margin-top: 20px;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center py-10">
-    <h1 class="text-3xl font-bold mb-6">Player Queue System</h1>
-    
-    <!-- Queue Display -->
-    <div class="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h2 class="text-xl font-semibold mb-4">Current Queue</h2>
-        <p class="mb-2">Total Queued Players: <span id="queueCount">0</span></p>
-        <div id="queueList" class="grid grid-cols-2 gap-2"></div>
+<body>
+
+    <h1>Bataan MaiMai Queue Management</h1>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal">
+        <h2>Admin Login</h2>
+        <input type="password" id="adminPassword" placeholder="Enter Admin Password">
+        <button onclick="checkAdmin()">Login</button>
+        <p id="loginError" style="color:red; display:none;">Incorrect Password!</p>
     </div>
 
-    <!-- Add Player Form -->
-    <div class="mt-6">
-        <input type="text" id="playerName" placeholder="Enter player name" class="p-2 rounded text-black">
-        <button onclick="addPlayer()" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Add Player</button>
-    </div>
-    
-    <!-- Swap Players Form -->
-    <div class="mt-6">
-        <input type="number" id="pos1" placeholder="Position 1" class="p-2 rounded text-black">
-        <input type="number" id="pos2" placeholder="Position 2" class="p-2 rounded text-black">
-        <button onclick="swapPlayers()" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">Swap</button>
-    </div>
+    <!-- Admin Controls (Hidden by Default) -->
+    <div id="adminControls">
+        <h2>Admin Controls</h2>
+        
+        <!-- Add Player -->
+        <input type="text" id="playerName" placeholder="Enter Player Name">
+        <button onclick="addPlayer()">Add Player</button>
 
-    <!-- Delete Top Pair Button -->
-    <div class="mt-6">
-        <button onclick="deleteTopPair()" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Delete Top Pair</button>
+        <!-- Delete Player by Position -->
+        <input type="number" id="positionToDelete" placeholder="Position to Delete">
+        <button onclick="deletePlayerByPosition()">Delete Player</button>
+
+        <!-- Swap Players -->
+        <button onclick="swapPlayers()">Swap First Two Players</button>
+
+        <!-- Show Current Players -->
+        <button onclick="showCurrentPlayers()">Show Current Players</button>
+        <div id="currentPlayers"></div>
+
+        <!-- Mark Player as Paid -->
+        <input type="checkbox" id="markPaidCheckbox"> Mark First Player as Paid
+        <button onclick="markPlayerAsPaid()">Update Payment Status</button>
+
+        <h3>Queue:</h3>
+        <ul id="queue"></ul>
     </div>
 
     <script>
-        const socket = io("https://bataan-maimai-v1-3.onrender.com"); // Replace with actual backend URL
+        let queue = JSON.parse(localStorage.getItem('queue')) || [];
+        let isAdmin = false;
 
-        function updateQueueDisplay(queue) {
-            const queueList = document.getElementById("queueList");
-            const queueCount = document.getElementById("queueCount");
-            queueList.innerHTML = "";
-            queueCount.textContent = queue.length;
-            queue.forEach((player, index) => {
-                const div = document.createElement("div");
-                div.className = "p-2 bg-gray-700 rounded text-center";
-                div.textContent = `${index + 1}. ${player}`;
-                queueList.appendChild(div);
-            });
+        // Load admin status from localStorage
+        if (localStorage.getItem('isAdmin') === 'true') {
+            isAdmin = true;
+            showAdminControls();
         }
-        
-        function addPlayer() {
-            const name = document.getElementById("playerName").value.trim();
-            if (name) {
-                socket.emit("addPlayer", name);
-                document.getElementById("playerName").value = "";
+
+        // Check Admin Password
+        function checkAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === 'maimaibataan') {
+                isAdmin = true;
+                localStorage.setItem('isAdmin', 'true');
+                showAdminControls();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
             }
         }
-        
+
+        // Show Admin Controls
+        function showAdminControls() {
+            document.getElementById('adminLoginModal').style.display = 'none';
+            document.getElementById('adminControls').style.display = 'block';
+            updateQueueDisplay();
+        }
+
+        // Add Player
+        function addPlayer() {
+            const playerName = document.getElementById('playerName').value;
+            if (playerName) {
+                queue.push({ name: playerName, paid: false });
+                updateQueue();
+            }
+        }
+
+        // Delete Player by Position
+        function deletePlayerByPosition() {
+            const position = parseInt(document.getElementById('positionToDelete').value) - 1;
+            if (position >= 0 && position < queue.length) {
+                queue.splice(position, 1);
+                updateQueue();
+            } else {
+                alert('Invalid Position');
+            }
+        }
+
+        // Swap First Two Players
         function swapPlayers() {
-            let pos1 = parseInt(document.getElementById("pos1").value) - 1;
-            let pos2 = parseInt(document.getElementById("pos2").value) - 1;
-            socket.emit("swapPlayers", { pos1, pos2 });
+            if (queue.length >= 2) {
+                [queue[0], queue[1]] = [queue[1], queue[0]];
+                updateQueue();
+            }
         }
-        
-        function deleteTopPair() {
-            socket.emit("deleteTopPair");
+
+        // Show Current Players
+        function showCurrentPlayers() {
+            if (queue.length === 0) {
+                document.getElementById('currentPlayers').innerHTML = 'No players in queue.';
+            } else {
+                let display = queue
+                    .slice(0, 2)
+                    .map((player, index) => `${index + 1}. ${player.name} ${player.paid ? '[PAID]' : ''}`)
+                    .join('<br>');
+                document.getElementById('currentPlayers').innerHTML = display || 'No players to display.';
+            }
         }
-        
-        socket.on("queueUpdate", (queue) => {
-            updateQueueDisplay(queue);
+
+        // Mark Player as Paid
+        function markPlayerAsPaid() {
+            if (queue.length > 0) {
+                queue[0].paid = document.getElementById('markPaidCheckbox').checked;
+                updateQueue();
+            } else {
+                alert('No players in queue to mark as paid.');
+            }
+        }
+
+        // Update Queue and Save to LocalStorage
+        function updateQueue() {
+            localStorage.setItem('queue', JSON.stringify(queue));
+            updateQueueDisplay();
+        }
+
+        // Update Queue Display
+        function updateQueueDisplay() {
+            const queueList = document.getElementById('queue');
+            queueList.innerHTML = '';
+            queue.forEach((player, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `${index + 1}. ${player.name} ${player.paid ? '[PAID]' : ''}`;
+                queueList.appendChild(li);
+            });
+        }
+
+        // Listen for LocalStorage Changes Across Tabs
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'queue') {
+                queue = JSON.parse(event.newValue);
+                updateQueueDisplay();
+            }
         });
+
+        // Load and Display Queue on Initial Load
+        updateQueueDisplay();
     </script>
 </body>
 </html>
