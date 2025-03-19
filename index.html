@@ -1,195 +1,161 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Bataan MaiMai Experimental</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaiMai Bataan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 </head>
-
-<body>
-    <h1>Bataan MaiMai Queue</h1>
-    <div id="queue"></div>
-    <button onclick="addPlayer()">Add Player</button>
-    <button onclick="swapPlayers()">Swap Players</button>
-
-    <!-- Admin Login Modal -->
-    <div id="adminLoginModal" class="modal">
-        <div class="modal-content">
-            <h2>Admin Login</h2>
-            <input type="password" id="adminPassword" placeholder="Enter admin password">
-            <button id="adminLoginButton">Login</button>
-        </div>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center py-10">
+    <h1 class="text-3xl font-bold mb-6">Player Queue System</h1>
+    
+    <!-- Admin Login -->
+    <div class="mt-6" id="admin-login">
+        <input type="password" id="adminPassword" placeholder="Enter Admin Password" class="p-2 rounded text-black">
+        <button onclick="adminLogin()" class="bg-yellow-500 hover:bg-yellow-700 text-white py-2 px-4 rounded">Admin Login</button>
     </div>
 
-    <!-- Admin Controls (Hidden by default) -->
-    <div id="adminControls" style="display: none;">
-        <h3>Admin Controls</h3>
-
-        <!-- Delete Player by Position -->
-        <h4>Delete Player by Position</h4>
-        <input type="number" id="deletePosition" placeholder="Enter position">
-        <button onclick="deletePlayerByPosition()">Delete Player</button>
-
-        <!-- Display Current Players -->
-        <h4>Display Current Players</h4>
-        <button onclick="displayCurrentPlayers()">Display Current Players</button>
-        <div id="currentPlayersDisplay"></div>
-
-        <!-- Mark Player as Paid -->
-        <h4>Mark Player as Paid</h4>
-        <input type="checkbox" id="markPaid"> Mark as Paid
-        <button onclick="markPlayerAsPaid()">Update Payment Status</button>
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="mt-6 hidden">
+        <button onclick="adminLogout()" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Logout</button>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Queue Display -->
+    <div class="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h2 class="text-xl font-semibold mb-4">Current Queue</h2>
+        <p class="mb-2">Total Queued Players: <span id="queueCount">0</span></p>
+        <div id="queueList" class="grid grid-cols-2 gap-2"></div>
+    </div>
+
+    <!-- Add Player Form -->
+    <div class="mt-6">
+        <input type="text" id="playerName" placeholder="Enter player name" class="p-2 rounded text-black">
+        <button onclick="addPlayer()" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Add Player</button>
+    </div>
+    
+    <!-- Swap Players Form -->
+    <div class="mt-6">
+        <input type="number" id="pos1" placeholder="Position 1" class="p-2 rounded text-black">
+        <input type="number" id="pos2" placeholder="Position 2" class="p-2 rounded text-black">
+        <button onclick="swapPlayers()" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">Swap</button>
+    </div>
+
+    <!-- Delete Player by Position -->
+    <div class="mt-6 hidden" id="deleteSection">
+        <input type="number" id="deletePos" placeholder="Position to Delete" class="p-2 rounded text-black">
+        <button onclick="deletePlayerByPosition()" class="bg-orange-500 hover:bg-orange-700 text-white py-2 px-4 rounded">Delete Player</button>
+    </div>
+
+    <!-- Mark Player as Paid -->
+    <div class="mt-6 hidden" id="paidSection">
+        <input type="number" id="paidPos" placeholder="Position to Mark Paid" class="p-2 rounded text-black">
+        <button onclick="markPlayerPaid()" class="bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded">Mark Paid</button>
+    </div>
+
+    <!-- Display Current Players -->
+    <div class="mt-6">
+        <button onclick="showCurrentPair()" class="bg-purple-500 hover:bg-purple-700 text-white py-2 px-4 rounded">Show Current Pair</button>
+        <div id="currentPair" class="mt-4 p-4 bg-gray-700 rounded hidden"></div>
+    </div>
+
     <script>
-        const socket = io();
-
-        let queue = [];
+        const socket = io("https://bataan-maimai-v1-3.onrender.com"); // Replace with actual backend URL
         let isAdmin = false;
 
-        // Handle admin login
-        document.getElementById('adminLoginButton').addEventListener('click', () => {
-            const enteredPassword = document.getElementById('adminPassword').value;
-            if (enteredPassword === 'maimaibataan') {
-                localStorage.setItem('isAdmin', 'true');
-                document.getElementById('adminLoginModal').style.display = 'none';
-                enableAdminFeatures();
-            } else {
-                alert('Incorrect password.');
-            }
-        });
+        function updateQueueDisplay(queue) {
+            const queueList = document.getElementById("queueList");
+            const queueCount = document.getElementById("queueCount");
+            queueList.innerHTML = "";
+            queueCount.textContent = queue.length;
+            queue.forEach((player, index) => {
+                const div = document.createElement("div");
+                div.className = "p-2 bg-gray-700 rounded text-center";
+                div.textContent = `${index + 1}. ${player}`;
+                queueList.appendChild(div);
+            });
+        }
 
-        // Enable admin functionality
-        function enableAdminFeatures() {
-            if (localStorage.getItem('isAdmin') === 'true') {
-                document.getElementById('adminControls').style.display = 'block';
+        function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === 'maimaibataan') {
                 isAdmin = true;
-            }
-        }
-
-        // Show modal if not authenticated
-        window.onload = () => {
-            if (localStorage.getItem('isAdmin') === 'true') {
-                enableAdminFeatures();
-                document.getElementById('adminLoginModal').style.display = 'none';
+                document.getElementById('admin-login').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                document.getElementById('deleteSection').classList.remove('hidden');
+                document.getElementById('paidSection').classList.remove('hidden');
+                alert('Admin login successful!');
             } else {
-                document.getElementById('adminLoginModal').style.display = 'block';
+                alert('Incorrect password!');
             }
-        };
+        }
 
-        // Add player
+        function adminLogout() {
+            isAdmin = false;
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('admin-login').style.display = 'block';
+            document.getElementById('deleteSection').classList.add('hidden');
+            document.getElementById('paidSection').classList.add('hidden');
+            alert('Logged out successfully!');
+        }
+
         function addPlayer() {
-            const playerName = prompt('Enter player name:');
-            if (playerName) {
-                socket.emit('addPlayer', playerName);
+            const name = document.getElementById("playerName").value.trim();
+            if (name) {
+                socket.emit("addPlayer", name);
+                document.getElementById("playerName").value = "";
             }
         }
 
-        // Swap players
         function swapPlayers() {
-            if (queue.length >= 2) {
-                [queue[0], queue[1]] = [queue[1], queue[0]];
-                socket.emit('queueUpdate', queue);
-            }
+            let pos1 = parseInt(document.getElementById("pos1").value) - 1;
+            let pos2 = parseInt(document.getElementById("pos2").value) - 1;
+            socket.emit("swapPlayers", { pos1, pos2 });
         }
 
-        // Delete player by position
         function deletePlayerByPosition() {
             if (!isAdmin) {
-                alert('Admin access required.');
+                alert('Admin authentication required!');
                 return;
             }
-            const position = parseInt(document.getElementById('deletePosition').value, 10);
-            if (position >= 0 && position < queue.length) {
-                queue.splice(position, 1);
-                socket.emit('queueUpdate', queue);
-                alert('Player deleted successfully.');
-            } else {
-                alert('Invalid position.');
-            }
+            const pos = parseInt(document.getElementById('deletePos').value);
+            socket.emit('deletePlayerByPosition', pos);
         }
 
-        // Display current players
-        function displayCurrentPlayers() {
-            const currentPlayers = queue.slice(0, 2);
-            const displayDiv = document.getElementById('currentPlayersDisplay');
-            displayDiv.innerHTML = '';
-            currentPlayers.forEach((player, index) => {
-                const playerDiv = document.createElement('div');
-                playerDiv.textContent = `Player ${index + 1}: ${player.name || player}`;
-                displayDiv.appendChild(playerDiv);
-            });
-        }
-
-        // Mark player as paid
-        function markPlayerAsPaid() {
+        function markPlayerPaid() {
             if (!isAdmin) {
-                alert('Admin access required.');
+                alert('Admin authentication required!');
                 return;
             }
-            const isPaid = document.getElementById('markPaid').checked;
-            if (queue.length > 0) {
-                queue[0].paid = isPaid;
-                socket.emit('queueUpdate', queue);
-                alert(`Player marked as ${isPaid ? 'paid' : 'unpaid'}.`);
-            } else {
-                alert('No players in queue.');
-            }
+            const pos = parseInt(document.getElementById('paidPos').value);
+            socket.emit('markPlayerPaid', pos);
         }
 
-        // Update queue display dynamically
-        socket.on('queueUpdate', (updatedQueue) => {
-            queue = updatedQueue;
-            updateQueueDisplay();
+        function deleteTopPair() {
+            socket.emit("deleteTopPair");
+        }
+
+        function showCurrentPair() {
+            socket.emit('getCurrentPair');
+        }
+
+        socket.on("queueUpdate", (queue) => {
+            updateQueueDisplay(queue);
         });
 
-        // Render queue dynamically
-        function updateQueueDisplay() {
-            const queueDiv = document.getElementById('queue');
-            queueDiv.innerHTML = '';
-            queue.forEach((player, index) => {
-                const playerDiv = document.createElement('div');
-                playerDiv.textContent = `${index + 1}. ${player.name || player} ${player.paid ? '[PAID]' : ''}`;
-                queueDiv.appendChild(playerDiv);
-            });
-        }
+        socket.on('displayCurrentPair', (pair) => {
+            const pairDiv = document.getElementById('currentPair');
+            if (pair.length === 2) {
+                pairDiv.innerHTML = `<p>Player 1: ${pair[0]}</p><p>Player 2: ${pair[1]}</p>`;
+            } else {
+                pairDiv.innerHTML = `<p>No pair available.</p>`;
+            }
+            pairDiv.classList.remove('hidden');
+        });
+
+        socket.on("errorMessage", (msg) => {
+            alert(msg);
+        });
     </script>
-
-    <style>
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.4);
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 300px;
-        }
-
-        #adminControls {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-        }
-
-        #queue div {
-            padding: 5px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-        }
-    </style>
 </body>
-
 </html>
