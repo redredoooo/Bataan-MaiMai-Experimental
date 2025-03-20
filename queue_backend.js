@@ -5,11 +5,11 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
 let queue = [];
@@ -18,57 +18,56 @@ const adminPassword = "maimaibataan";
 
 // Admin Login
 io.on("connection", (socket) => {
-    console.log("New client connected");
-    io.emit("queueUpdate", queue);
+  console.log("New client connected");
+  io.emit("queueUpdate", queue);
 
-    socket.on("adminLogin", (password) => {
-      if (password === adminPassword) {
-        adminAuthenticated = true;
-        socket.emit("loginSuccess");
-      } else {
-        socket.emit("loginFailed");
-      }
+  socket.on("adminLogin", (password) => {
+    if (password === adminPassword) {
+      adminAuthenticated = true;
+      socket.emit("loginSuccess");
+    } else {
+      socket.emit("loginFailed");
+    }
   });
 
   // Add Player
   socket.on("addPlayer", (name) => {
-      queue.push({ name: name, paid: false });
-      io.emit("queueUpdate", queue);
+    queue.push({ name: name, paid: false });
+    io.emit("queueUpdate", queue);
   });
 
   // Swap Players
   socket.on("swapPlayers", ({ pos1, pos2 }) => {
-      if (pos1 >= 0 && pos2 >= 0 && pos1 < queue.length && pos2 < queue.length) {
-          [queue[pos1], queue[pos2]] = [queue[pos2], queue[pos1]];
-          io.emit("queueUpdate", queue);
-      }
+    if (pos1 >= 0 && pos2 >= 0 && pos1 < queue.length && pos2 < queue.length) {
+      [queue[pos1], queue[pos2]] = [queue[pos2], queue[pos1]];
+      io.emit("queueUpdate", queue);
+    }
   });
 
   // Delete Top Pair
   socket.on("deleteTopPair", () => {
-        if (queue.length >= 2) {
-              queue.splice(0, 2);
-          } else if (queue.length === 1) {
-              queue.splice(0, 1);
-          }
-          io.emit("queueUpdate", queue);
-      });
+    if (queue.length >= 2) {
+      queue.splice(0, 2);
+    } else if (queue.length === 1) {
+      queue.splice(0, 1);
+    }
+    io.emit("queueUpdate", queue);
   });
 
   // Delete Player by Position
   socket.on("deletePlayerByPosition", (pos) => {
-      if (pos < 0 || pos >= queue.length) {
-          queue.splice(pos, 1);
-          io.emit("queueUpdate", queue);
-      }
+    if (pos >= 0 && pos < queue.length) {
+      queue.splice(pos, 1);
+      io.emit("queueUpdate", queue);
+    }
   });
 
   // Mark Player as Paid
   socket.on("markPlayerPaid", (pos) => {
-      if (pos < 0 || pos >= queue.length) {
-        queue[pos].paid = true;
-        io.emit("queueUpdate", queue);
-      }
+    if (pos >= 0 && pos < queue.length) {
+      queue[pos].paid = true;
+      io.emit("queueUpdate", queue);
+    }
   });
 
   // Display Current Pair
