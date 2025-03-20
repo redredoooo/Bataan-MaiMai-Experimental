@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new socketIo(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
@@ -16,9 +16,14 @@ let queue = [];
 let adminAuthenticated = false;
 const adminPassword = "maimaibataan";
 
+io.on("connection", (socket) => {
+    console.log("A user connected");
+    socket.emit("queueUpdate", queue);
+
 // Admin Login
 io.on("connection", (socket) => {
   console.log("New client connected");
+  io.emit("queueUpdate", queue);
 
   socket.on("adminLogin", (password) => {
     if (password === adminPassword) {
