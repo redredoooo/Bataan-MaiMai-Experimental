@@ -16,10 +16,6 @@ let queue = [];
 let adminAuthenticated = false;
 const adminPassword = "maimaibataan";
 
-io.on("connection", (socket) => {
-    console.log("A user connected");
-    socket.emit("queueUpdate", queue);
-
 // Admin Login
 io.on("connection", (socket) => {
   console.log("New client connected");
