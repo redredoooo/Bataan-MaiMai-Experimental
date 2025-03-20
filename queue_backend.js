@@ -72,9 +72,9 @@ io.on("connection", (socket) => {
   // Display Current Pair
   socket.on("displayCurrentPair", () => {
     if (queue.length >= 2) {
-      socket.emit("showCurrentPair", [queue[0], queue[1]]);
+      socket.emit("displayCurrentPair", [queue[0].name, queue[1].name]);
     } else {
-      socket.emit("showCurrentPair", []);
+      socket.emit("displayCurrentPair", [], []);
     }
   });
 });
