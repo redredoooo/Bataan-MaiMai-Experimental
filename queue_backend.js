@@ -7,9 +7,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+    origin: "*"
+  }
 });
 
 let queue = [];
@@ -31,8 +30,8 @@ io.on("connection", (socket) => {
   });
 
   // Add Player
-  socket.on("addPlayer", (name) => {
-    queue.push({ name: name, paid: false });
+  socket.on("addPlayer", (playerName) => {
+    queue.push({ name: playerName, paid: false });
     io.emit("queueUpdate", queue);
   });
 
@@ -77,10 +76,6 @@ io.on("connection", (socket) => {
     } else {
       socket.emit("showCurrentPair", []);
     }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected");
   });
 });
 
