@@ -53,6 +53,11 @@
         <button onclick="markPlayerPaid()" class="bg-teal-500 hover:bg-teal-700 text-white py-2 px-4 rounded">Mark Paid</button>
     </div>
 
+    <!-- Delete Top Pair Button -->
+    <div class="mt-6 hidden" id="deleteTopPair">
+        <button onclick="deleteTopPair()" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Delete Top Pair</button>
+    </div>
+
     <!-- Display Current Players -->
     <div class="mt-6">
         <button onclick="showCurrentPair()" class="bg-purple-500 hover:bg-purple-700 text-white py-2 px-4 rounded">Show Current Pair</button>
@@ -86,6 +91,7 @@
                 document.getElementById('paidSection').classList.remove('hidden');
                 document.getElementById('swapPlayers').classList.remove('hidden');
                 document.getElementById('addPlayer').classList.remove('hidden');
+                document.getElementById('deleteTopPair').classList.remove('hidden');
                 alert('Admin login successful!');
             } else {
                 alert('Incorrect password!');
@@ -98,6 +104,9 @@
             document.getElementById('admin-login').style.display = 'block';
             document.getElementById('deleteSection').classList.add('hidden');
             document.getElementById('paidSection').classList.add('hidden');
+            document.getElementById('addPlayer').classList.add('hidden');
+            document.getElementById('swapPlayers').classList.add('hidden');
+            document.getElementById('deleteTopPair').classList.add('hidden');
             alert('Logged out successfully!');
         }
 
