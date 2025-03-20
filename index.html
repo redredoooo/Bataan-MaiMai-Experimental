@@ -29,13 +29,13 @@
     </div>
 
     <!-- Add Player Form -->
-    <div class="mt-6">
+    <div class="mt-6 hidden" id="addPlayer">
         <input type="text" id="playerName" placeholder="Enter player name" class="p-2 rounded text-black">
         <button onclick="addPlayer()" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Add Player</button>
     </div>
     
     <!-- Swap Players Form -->
-    <div class="mt-6">
+    <div class="mt-6 hidden" id="swapPlayers">
         <input type="number" id="pos1" placeholder="Position 1" class="p-2 rounded text-black">
         <input type="number" id="pos2" placeholder="Position 2" class="p-2 rounded text-black">
         <button onclick="swapPlayers()" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">Swap</button>
@@ -84,6 +84,8 @@
                 document.getElementById('admin-panel').style.display = 'block';
                 document.getElementById('deleteSection').classList.remove('hidden');
                 document.getElementById('paidSection').classList.remove('hidden');
+                document.getElementById('swapPlayers').classList.remove('hidden');
+                document.getElementById('addPlayer').classList.remove('hidden');
                 alert('Admin login successful!');
             } else {
                 alert('Incorrect password!');
