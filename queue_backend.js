@@ -12,6 +12,7 @@ const io = socketIo(server, {
 });
 
 let queue = [];
+let currentlyPlaying = [];
 let adminAuthenticated = false;
 const adminPassword = "maimaibataan";
 
@@ -19,6 +20,7 @@ const adminPassword = "maimaibataan";
 io.on("connection", (socket) => {
   console.log("New client connected");
   io.emit("queueUpdate", queue);
+  io.emit("playingUpdate", currentlyPlaying); // Send currently playing on connect
 
   socket.on("adminLogin", (password) => {
     if (password === adminPassword) {
@@ -77,7 +79,25 @@ io.on("connection", (socket) => {
       socket.emit("displayCurrentPair", [], []);
     }
   });
+  // Next Pair Playing - Replace Current Pair
+  socket.on("nextPairPlaying", () => {
+    if (queue.length >= 2) {
+      const pair = queue.splice(0, 2); // Get top 2 players
+  
+      // Replace current pair if already playing
+      if (currentlyPlaying.length > 0) {
+        currentlyPlaying = []; // Clear existing pair
+      }
+      currentlyPlaying = pair; // Add new pair to currently playing
+  
+      io.emit("queueUpdate", queue);
+      io.emit("playingUpdate", currentlyPlaying);
+    } else {
+      socket.emit("errorMessage", "Not enough players in the queue.");
+    }
+  });
 });
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
