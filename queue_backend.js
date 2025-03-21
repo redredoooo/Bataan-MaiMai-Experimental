@@ -98,7 +98,7 @@ io.on("connection", (socket) => {
   });
 
   // Clear Currently Playing
-  socket.on("clearCurrentlyPlaying", () => {
+  socket.on("deleteCurrentlyPlaying", () => {
     currentlyPlaying = [];
     io.emit("playingUpdate", currentlyPlaying);
   });
