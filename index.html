@@ -67,6 +67,7 @@
     <script>
         const socket = io("https://bataan-maimai-experimental.onrender.com"); // Replace with actual backend URL
         let isAdmin = false;
+        const index = index + 1
 
         function updateQueueDisplay(queue) {
             const queueList = document.getElementById("queueList");
@@ -76,11 +77,11 @@
             queue.forEach((player, index) => {
                 const div = document.createElement("div");
                 div.className = "p-2 bg-gray-700 rounded text-center";
-                div.textContent = `${index + 1}. ${player.name} ${player.paid ? "(Paid)" : "(Unpaid)"}`;
+                div.textContent = `${index}. ${player.name} ${player.paid ? "(Paid)" : "(Unpaid)"}`;
                 queueList.appendChild(div);
             });
         }
-
+    
         function adminLogin() {
             const password = document.getElementById('adminPassword').value;
             if (password === 'maimaibataan') {
