@@ -21,6 +21,12 @@
         <button onclick="adminLogout()" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Logout</button>
     </div>
 
+      <!-- Currently Playing List -->
+    <div class="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-lg mt-6">
+        <h2 class="text-xl font-semibold mb-4">Currently Playing</h2>
+        <div id="playingList" class="grid grid-cols-2 gap-2"></div>
+    </div>
+
     <!-- Queue Display -->
     <div class="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-lg">
         <h2 class="text-xl font-semibold mb-4">Current Queue</h2>
@@ -58,10 +64,9 @@
         <button onclick="deleteTopPair()" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Delete Top Pair</button>
     </div>
 
-    <!-- Display Current Players -->
-    <div class="mt-6">
-        <button onclick="showCurrentPair()" class="bg-purple-500 hover:bg-purple-700 text-white py-2 px-4 rounded">Show Current Pair</button>
-        <div id="currentPair" class="mt-4 p-4 bg-gray-700 rounded hidden"></div>
+    <!-- Next Pair Playing Button -->
+    <div class="mt-6 hidden" id="nextPairPlaying">
+        <button onclick="nextPairPlaying()" class="bg-indigo-500 hover:bg-indigo-700 text-white py-2 px-4 rounded">Next Pair Playing</button>
     </div>
 
     <script>
@@ -92,6 +97,7 @@
                 document.getElementById('swapPlayers').classList.remove('hidden');
                 document.getElementById('addPlayer').classList.remove('hidden');
                 document.getElementById('deleteTopPair').classList.remove('hidden');
+                document.getElementById('nextPairPlaying').classList.remove('hidden');
                 alert('Admin login successful!');
             } else {
                 alert('Incorrect password!');
@@ -107,6 +113,7 @@
             document.getElementById('addPlayer').classList.add('hidden');
             document.getElementById('swapPlayers').classList.add('hidden');
             document.getElementById('deleteTopPair').classList.add('hidden');
+            document.getElementById('nextPairPlaying').classList.add('hidden');
             alert('Logged out successfully!');
         }
 
@@ -149,6 +156,27 @@
         function showCurrentPair() {
             socket.emit('getCurrentPair');
         }
+
+        function nextPairPlaying() {
+            socket.emit("nextPairPlaying");
+        }
+        
+        // Update Currently Playing Display
+        function updatePlayingDisplay(playing) {
+            const playingList = document.getElementById("playingList");
+            playingList.innerHTML = "";
+            playing.forEach((player, index) => {
+                const div = document.createElement("div");
+                div.className = "p-2 bg-green-700 rounded text-center";
+                div.textContent = `${index + 1}. ${player.name} (Playing)`;
+                playingList.appendChild(div);
+            });
+        }
+        
+        // Listen for currently playing update
+        socket.on("playingUpdate", (playing) => {
+            updatePlayingDisplay(playing);
+        });
 
         socket.on("queueUpdate", (queue) => {
             updateQueueDisplay(queue);
