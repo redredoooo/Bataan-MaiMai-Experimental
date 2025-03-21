@@ -69,6 +69,11 @@
         <button onclick="nextPairPlaying()" class="bg-indigo-500 hover:bg-indigo-700 text-white py-2 px-4 rounded">Next Pair Playing</button>
     </div>
 
+    <!-- Delete Top Pair Button -->
+    <div class="mt-6 hidden" id="deleteCurrentlyPlaying">
+        <button onclick="deleteCurrentlyPlaying()" class="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded">Clear Currently Playing</button>
+    </div>
+
     <script>
         const socket = io("https://bataan-maimai-experimental.onrender.com"); // Replace with actual backend URL
         let isAdmin = false;
@@ -98,6 +103,7 @@
                 document.getElementById('addPlayer').classList.remove('hidden');
                 document.getElementById('deleteTopPair').classList.remove('hidden');
                 document.getElementById('nextPairPlaying').classList.remove('hidden');
+                document.getElementById('deleteCurrentlyPlaying').classList.remove('hidden');
                 alert('Admin login successful!');
             } else {
                 alert('Incorrect password!');
@@ -114,6 +120,7 @@
             document.getElementById('swapPlayers').classList.add('hidden');
             document.getElementById('deleteTopPair').classList.add('hidden');
             document.getElementById('nextPairPlaying').classList.add('hidden');
+            document.getElementById('deleteCurrentlyPlaying').classList.add('hidden');
             alert('Logged out successfully!');
         }
 
@@ -159,6 +166,10 @@
 
         function nextPairPlaying() {
             socket.emit("nextPairPlaying");
+        }
+
+        function deleteCurrentlyPlaying() {
+            socket.emit("deleteCurrentlyPlaying");
         }
         
         // Update Currently Playing Display
