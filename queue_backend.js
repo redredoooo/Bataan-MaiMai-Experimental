@@ -96,6 +96,12 @@ io.on("connection", (socket) => {
       socket.emit("errorMessage", "Not enough players in the queue.");
     }
   });
+
+  // Clear Currently Playing
+  socket.on("clearCurrentlyPlaying", () => {
+    currentlyPlaying = [];
+    io.emit("playingUpdate", currentlyPlaying);
+  });
 });
 
 
