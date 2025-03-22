@@ -6,81 +6,112 @@
     <title>MaiMai Bataan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        body {
+            background: radial-gradient(circle, #ffd1dc, #cce7ff);
+            animation: backgroundMove 10s infinite alternate ease-in-out;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+        }
+        @keyframes backgroundMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 100px; }
+        }
+        .glow {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 15px rgba(255, 182, 193, 0.7);
+        }
+        .button-glow {
+            transition: all 0.3s ease-in-out;
+        }
+        .button-glow:hover {
+            transform: scale(1.1);
+            box-shadow: 0px 0px 15px rgba(255, 182, 193, 0.5);
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
 </head>
-<body class="bg-black text-white min-h-screen flex flex-col items-center py-10">
-    <h1 class="text-3xl font-bold mb-6 text-white">Player Queue System</h1>
+<body class="text-gray-900 flex flex-col items-center py-10 font-mono">
+    <h1 class="text-4xl glow font-bold mb-6">Player Queue System</h1>
     
     <!-- Admin Login -->
-    <div class="mt-6" id="admin-login">
+    <div class="mt-6 card p-4" id="admin-login">
         <input type="password" id="adminPassword" placeholder="Enter Admin Password" class="p-2 rounded border border-gray-600 bg-gray-800 text-white">
         <button onclick="adminLogin()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Admin Login</button>
     </div>
 
     <!-- Admin Panel -->
-    <div id="admin-panel" class="mt-6 hidden">
+    <div id="admin-panel" class="mt-6 hidden card p-4">
         <button onclick="adminLogout()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Logout</button>
     </div>
 
     <!-- Currently Playing List -->
-    <div class="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-lg mt-6">
-        <h2 class="text-xl font-semibold mb-4 text-white">Currently Playing</h2>
-        <div id="playingList" class="grid grid-cols-2 gap-2"></div>
+    <div class="w-full max-w-2xl card p-6 mt-6">
+        <h2 class="text-2xl font-semibold glow">Currently Playing</h2>
+        <div id="playingList" class="grid grid-cols-2 gap-2 mt-4"></div>
     </div>
-
     <!-- Queue Display -->
-    <div class="w-full max-w-2xl bg-gray-800 p-6 rounded-lg shadow-lg mt-6">
-        <h2 class="text-xl font-semibold mb-4 text-white">Current Queue</h2>
-        <p class="mb-2 text-gray-400">Total Queued Players: <span id="queueCount" class="font-bold text-white">0</span></p>
-        <div id="queueList" class="grid grid-cols-2 gap-2"></div>
+    <div class="w-full max-w-2xl card p-6 mt-6">
+        <h2 class="text-2xl font-semibold glow">Current Queue</h2>
+        <p class="text-gray-600">Total Players: <span id="queueCount" class="font-bold text-gray-900">0</span></p>
+        <div id="queueList" class="grid grid-cols-2 gap-2 mt-4"></div>
     </div>
 
     <!-- Add Player Form -->
-    <div class="mt-6 hidden" id="addPlayer">
+    <div class="mt-6 hidden card p-4" id="addPlayer">
         <input type="text" id="playerName" placeholder="Enter player name" class="p-2 rounded border border-gray-600 bg-gray-800 text-white">
         <button onclick="addPlayer()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Add Player</button>
     </div>
     
     <!-- Swap Players Form -->
-    <div class="mt-6 hidden" id="swapPlayers">
+    <div class="mt-6 hidden card p-4" id="swapPlayers">
         <input type="number" id="pos1" placeholder="Position 1" class="p-2 rounded border border-gray-600 bg-gray-800 text-white">
         <input type="number" id="pos2" placeholder="Position 2" class="p-2 rounded border border-gray-600 bg-gray-800 text-white">
         <button onclick="swapPlayers()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Swap</button>
     </div>
 
     <!-- Delete Player by Position -->
-    <div class="mt-6 hidden" id="deleteSection">
+    <div class="mt-6 hidden card p-4" id="deleteSection">
         <input type="number" id="deletePos" placeholder="Position to Delete" class="p-2 rounded border border-gray-600 bg-gray-800 text-white">
         <button onclick="deletePlayerByPosition()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Delete Player</button>
     </div>
 
     <!-- Mark Player as Paid -->
-    <div class="mt-6 hidden" id="paidSection">
+    <div class="mt-6 hidden card p-4" id="paidSection">
         <input type="number" id="paidPos" placeholder="Position to Mark Paid" class="p-2 rounded border border-gray-600 bg-gray-800 text-white">
         <button onclick="markPlayerPaid()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Mark Paid</button>
     </div>
 
     <!-- Delete Top Pair Button -->
-    <div class="mt-6 hidden" id="deleteTopPair">
+    <div class="mt-6 hidden card p-4" id="deleteTopPair">
         <button onclick="deleteTopPair()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Delete Top Pair</button>
     </div>
 
     <!-- Next Pair Playing Button -->
-    <div class="mt-6 hidden" id="nextPairPlaying">
+    <div class="mt-6 hidden card p-4" id="nextPairPlaying">
         <button onclick="nextPairPlaying()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Next Pair Playing</button>
     </div>
 
     <!-- Delete Currently Playing -->
-    <div class="mt-6 hidden" id="deleteCurrentlyPlaying">
+    <div class="mt-6 hidden card p-4" id="deleteCurrentlyPlaying">
         <button onclick="deleteCurrentlyPlaying()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Clear Currently Playing</button>
     </div>
 
     <!-- Server Restart -->
-    <div class="mt-6 hidden" id="restartBackend">
+    <div class="mt-6 hidden card p-4" id="restartBackend">
         <button onclick="restartBackend()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded">Server Restart</button>
     </div>
 
     <script>
-        const socket = io("https://bataan-maimai-v1-3.onrender.com"); // Replace with actual backend URL
+        const socket = io("https://bataan-maimai-experimental.onrender.com"); // Replace with actual backend URL
         let isAdmin = false;
 
         function updateQueueDisplay(queue) {
@@ -181,7 +212,7 @@
         }
 
         function restartBackend() {
-            fetch("https://api.render.com/deploy/srv-cvcdpupu0jms73eqmvag?key=nLT66_CWs3M", {
+            fetch("https://api.render.com/deploy/srv-cvdlh73tq21c73e6cn70?key=v_4pYZ9j4zQ", {
                 method: "POST"
             })
             .then(response => {
