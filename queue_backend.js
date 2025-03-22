@@ -14,7 +14,7 @@ const io = socketIo(server, {
 let queue = [];
 let currentlyPlaying = [];
 let adminAuthenticated = false;
-const adminPassword = "maimaibataan";
+const adminPassword = "Nachi";
 
 // Admin Login
 io.on("connection", (socket) => {
